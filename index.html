@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MPL 2026 - Player Registration</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/static/images/logo-mpl.svg">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg mb-4 header-nav">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" href="/">
+        <img src="/static/images/logo-mpl.svg" alt="MPL 2026" height="54" style="margin-right:14px">
+        <span class="brand-text">Maskedih Premier League</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMain">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link text-white" href="/">Register</a></li>
+          <li class="nav-item"><a class="nav-link text-white" href="/dashboard/login/">Admin</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div id="alert-container"></div>
+
+    <div class="hero d-flex align-items-center">
+      <div>
+        <h1 class="display-5">Player Registration &mdash; <span class="accent">MPL 2026</span></h1>
+        <p class="text-muted">Register to participate in Maskedih Premier League 2026. All fields marked * are required.</p>
+      </div>
+      <div class="ms-auto">
+        <a class="btn btn-outline-secondary" href="/dashboard/login/"><i class="bi bi-person-lock"></i> Admin</a>
+      </div>
+    </div>
+
+    <div class="card card-primary mb-4">
+      <div class="card-body">
+        <form id="regForm" novalidate>
+          <div class="row">
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Full Name *</label>
+              <input name="full_name" class="form-control" required>
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Mobile Number *</label>
+              <input name="mobile_number" class="form-control" required>
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Email</label>
+              <input name="email" type="email" class="form-control">
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Date of Birth</label>
+              <input name="date_of_birth" type="date" class="form-control" id="dobInput">
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Age</label>
+              <input name="age" type="number" class="form-control" id="ageInput">
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Gender</label>
+              <select name="gender" class="form-select">
+                <option value="">---------</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+                <option value="O">Other</option>
+              </select>
+            </div>
+            <div class="mb-3 col-md-12">
+              <label class="form-label">Address</label>
+              <textarea name="address" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">District</label>
+              <input name="district" class="form-control">
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">State</label>
+              <input name="state" class="form-control">
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Playing Role</label>
+              <select name="playing_role" class="form-select">
+                <option value="">---------</option>
+                <option value="Batsman">Batsman</option>
+                <option value="Bowler">Bowler</option>
+                <option value="All-Rounder">All-Rounder</option>
+                <option value="Wicket Keeper">Wicket Keeper</option>
+              </select>
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Batting Style</label>
+              <input name="batting_style" class="form-control" placeholder="e.g. Right-hand Bat">
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Bowling Style</label>
+              <input name="bowling_style" class="form-control" placeholder="e.g. Right-arm Fast">
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Profile Photo <span class="text-muted small">(optional)</span></label>
+              <input name="profile_photo" type="file" accept="image/*" class="form-control" id="photoInput">
+              <div class="photo-preview" id="photoPreview"></div>
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Emergency Contact Name</label>
+              <input name="emergency_contact_name" class="form-control">
+            </div>
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Emergency Contact Number</label>
+              <input name="emergency_contact_number" class="form-control">
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-brand" id="submitBtn">Submit Registration</button>
+            <button type="reset" class="btn btn-outline-secondary">Reset</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // DOB → Age auto-fill
+    document.getElementById('dobInput').addEventListener('change', function () {
+      const d = new Date(this.value);
+      if (!d || isNaN(d)) return;
+      const today = new Date();
+      let age = today.getFullYear() - d.getFullYear();
+      const m = today.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+      document.getElementById('ageInput').value = age;
+    });
+
+    // Photo preview
+    document.getElementById('photoInput').addEventListener('change', function () {
+      const preview = document.getElementById('photoPreview');
+      preview.innerHTML = '';
+      const file = this.files[0];
+      if (!file) return;
+      const img = document.createElement('img');
+      img.className = 'img-preview img-fluid mb-2';
+      img.src = URL.createObjectURL(file);
+      preview.appendChild(img);
+    });
+
+    function showAlert(msg, type = 'danger') {
+      const c = document.getElementById('alert-container');
+      c.innerHTML = `<div class="alert alert-${type} alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button>${msg}</div>`;
+      c.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.getElementById('regForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+
+      const form = e.target;
+      const formData = new FormData(form);
+
+      // Build plain object for JSON (skip file fields)
+      const data = {};
+      for (const [k, v] of formData.entries()) {
+        if (typeof v === 'string') data[k] = v;
+      }
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+        if (res.ok) {
+          window.location.href = '/success/';
+        } else {
+          showAlert(json.error || 'Registration failed. Please try again.');
+          btn.disabled = false;
+          btn.textContent = 'Submit Registration';
+        }
+      } catch {
+        showAlert('Network error. Please check your connection and try again.');
+        btn.disabled = false;
+        btn.textContent = 'Submit Registration';
+      }
+    });
+  </script>
+</body>
+</html>

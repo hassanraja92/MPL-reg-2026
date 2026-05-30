@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Players — MPL 2026</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/static/images/logo-mpl.svg">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg mb-4 header-nav">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" href="/">
+        <img src="/static/images/logo-mpl.svg" alt="MPL 2026" height="54" style="margin-right:14px">
+        <span class="brand-text">Maskedih Premier League</span>
+      </a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link text-white" href="/dashboard/">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link text-warning" href="#" id="logoutLink">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h2 class="mb-3">Players</h2>
+
+    <form class="row g-2 mb-3" id="filterForm">
+      <div class="col-auto">
+        <input name="q" id="qInput" class="form-control" placeholder="Search name or mobile">
+      </div>
+      <div class="col-auto">
+        <input name="district" id="districtInput" class="form-control" placeholder="District">
+      </div>
+      <div class="col-auto">
+        <select name="role" id="roleInput" class="form-select">
+          <option value="">All Roles</option>
+          <option value="Batsman">Batsman</option>
+          <option value="Bowler">Bowler</option>
+          <option value="All-Rounder">All-Rounder</option>
+          <option value="Wicket Keeper">Wicket Keeper</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-secondary">Filter</button>
+      </div>
+      <div class="col-auto ms-auto">
+        <a href="#" class="btn btn-link" id="clearBtn">Clear</a>
+        <a href="#" class="btn btn-outline-primary" id="exportBtn"><i class="bi bi-download"></i> Export CSV</a>
+      </div>
+    </form>
+
+    <div id="tableContainer">
+      <div class="text-center py-4 text-muted"><i class="bi bi-hourglass-split fs-2"></i><p>Loading…</p></div>
+    </div>
+    <nav id="paginationContainer"></nav>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const token = localStorage.getItem('mpl_token');
+    if (!token) window.location.href = '/dashboard/login/';
+
+    document.getElementById('logoutLink').addEventListener('click', function (e) {
+      e.preventDefault();
+      localStorage.removeItem('mpl_token');
+      localStorage.removeItem('mpl_username');
+      window.location.href = '/dashboard/login/';
+    });
+
+    let currentPage = 1;
+    let currentFilters = {};
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function getParams() {
+      const p = new URLSearchParams();
+      if (currentFilters.q) p.set('q', currentFilters.q);
+      if (currentFilters.district) p.set('district', currentFilters.district);
+      if (currentFilters.role) p.set('role', currentFilters.role);
+      p.set('page', currentPage);
+      return p;
+    }
+
+    async function loadPlayers() {
+      const params = getParams();
+      const res = await fetch(`/api/players?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) {
+        localStorage.removeItem('mpl_token');
+        window.location.href = '/dashboard/login/';
+        return;
+      }
+      const data = await res.json();
+
+      if (!data.players || data.players.length === 0) {
+        document.getElementById('tableContainer').innerHTML =
+          '<div class="alert alert-info">No players found.</div>';
+        document.getElementById('paginationContainer').innerHTML = '';
+        return;
+      }
+
+      const rows = data.players.map(p => `
+        <tr>
+          <td>${p.id}</td>
+          <td>${escHtml(p.fullName)}</td>
+          <td>${escHtml(p.mobileNumber)}</td>
+          <td>${escHtml(p.playingRole || '—')}</td>
+          <td>${escHtml(p.district || '—')}</td>
+          <td>${p.isApproved ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-warning text-dark">No</span>'}</td>
+          <td><a class="btn btn-sm btn-primary" href="/dashboard/player/?id=${p.id}">View</a></td>
+        </tr>`).join('');
+
+      document.getElementById('tableContainer').innerHTML = `
+        <table class="table table-striped">
+          <thead>
+            <tr><th>#</th><th>Name</th><th>Mobile</th><th>Role</th><th>District</th><th>Approved</th><th>Actions</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p class="text-muted small">Showing ${data.players.length} of ${data.total} players</p>
+      `;
+
+      // Pagination
+      if (data.num_pages > 1) {
+        let pages = '';
+        if (currentPage > 1) {
+          pages += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage - 1}">Previous</a></li>`;
+        }
+        pages += `<li class="page-item disabled"><span class="page-link">Page ${data.page} of ${data.num_pages}</span></li>`;
+        if (currentPage < data.num_pages) {
+          pages += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage + 1}">Next</a></li>`;
+        }
+        document.getElementById('paginationContainer').innerHTML = `<ul class="pagination">${pages}</ul>`;
+
+        document.querySelectorAll('[data-page]').forEach(a => {
+          a.addEventListener('click', function (e) {
+            e.preventDefault();
+            currentPage = parseInt(this.dataset.page);
+            loadPlayers();
+          });
+        });
+      } else {
+        document.getElementById('paginationContainer').innerHTML = '';
+      }
+    }
+
+    document.getElementById('filterForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      currentPage = 1;
+      currentFilters = {
+        q: document.getElementById('qInput').value.trim(),
+        district: document.getElementById('districtInput').value.trim(),
+        role: document.getElementById('roleInput').value,
+      };
+      loadPlayers();
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', function (e) {
+      e.preventDefault();
+      currentPage = 1;
+      currentFilters = {};
+      document.getElementById('qInput').value = '';
+      document.getElementById('districtInput').value = '';
+      document.getElementById('roleInput').value = '';
+      loadPlayers();
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', function (e) {
+      e.preventDefault();
+      const params = getParams();
+      const url = `/api/players/export?${params}`;
+      // Trigger download with auth header via blob
+      fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.blob())
+        .then(blob => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'mpl2026_players.csv';
+          a.click();
+        });
+    });
+
+    loadPlayers();
+  </script>
+</body>
+</html>
