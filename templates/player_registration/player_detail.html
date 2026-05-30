@@ -1,0 +1,40 @@
+{% extends 'player_registration/base.html' %}
+{% block content %}
+  <h2>{{ player.full_name }}</h2>
+  <div class="row">
+    <div class="col-md-4">
+      {% if player.profile_photo %}<img src="{{ player.profile_photo.url }}" class="img-fluid" alt="photo">{% endif %}
+    </div>
+    <div class="col-md-8">
+      <table class="table table-borderless">
+        <tbody>
+          <tr><th>Mobile</th><td>{{ player.mobile_number }}</td></tr>
+          <tr><th>Email</th><td>{{ player.email }}</td></tr>
+          <tr><th>DOB</th><td>{{ player.date_of_birth }}</td></tr>
+          <tr><th>Age</th><td>{{ player.age }}</td></tr>
+          <tr><th>Role</th><td>{{ player.playing_role }}</td></tr>
+        </tbody>
+      </table>
+      <form method="post" onsubmit="return confirmAction(event);">
+        {% csrf_token %}
+        <button name="action" value="approve" class="btn btn-success">Approve</button>
+        <button name="action" value="reject" class="btn btn-warning">Reject</button>
+        <a href="/dashboard/players/{{ player.pk }}/edit/" class="btn btn-primary">Edit</a>
+        {% if user.is_staff %}
+          <button name="action" value="delete" class="btn btn-danger">Delete</button>
+        {% endif %}
+        <a href="/dashboard/players/" class="btn btn-secondary">Back</a>
+      </form>
+
+      <script>
+        function confirmAction(e){
+          const btn = document.activeElement;
+          if(btn && btn.value === 'delete'){
+            return confirm('Are you sure you want to delete this player? This action cannot be undone.');
+          }
+          return true;
+        }
+      </script>
+    </div>
+  </div>
+{% endblock %}

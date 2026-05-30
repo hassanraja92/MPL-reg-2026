@@ -1,0 +1,10 @@
+{% extends 'player_registration/base.html' %}
+{% block content %}
+  <h2>Delete Player</h2>
+  <p>Are you sure you want to delete <strong>{{ player.full_name }}</strong>?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button class="btn btn-danger">Delete</button>
+    <a href="/dashboard/players/{{ player.pk }}/" class="btn btn-secondary">Cancel</a>
+  </form>
+{% endblock %}

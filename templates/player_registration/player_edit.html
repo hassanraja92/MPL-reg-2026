@@ -1,0 +1,18 @@
+{% extends 'player_registration/base.html' %}
+{% block content %}
+  <h2>Edit Player</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+      {% for field in form.visible_fields %}
+        <div class="mb-3 col-md-6">
+          <label class="form-label">{{ field.label_tag }}</label>
+          {{ field }}
+          {% for err in field.errors %}<div class="text-danger">{{ err }}</div>{% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    <button class="btn btn-primary">Save</button>
+    <a href="/dashboard/players/{{ player.pk }}/" class="btn btn-secondary">Cancel</a>
+  </form>
+{% endblock %}

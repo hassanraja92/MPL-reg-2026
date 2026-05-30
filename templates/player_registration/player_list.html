@@ -1,0 +1,38 @@
+{% extends 'player_registration/base.html' %}
+{% block content %}
+  <h2>Players</h2>
+  <form class="row g-2 mb-3" method="get">
+    <div class="col-auto"><input name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Search name or mobile"></div>
+    <div class="col-auto"><input name="district" value="{{ request.GET.district }}" class="form-control" placeholder="District"></div>
+    <div class="col-auto"><button class="btn btn-secondary">Filter</button></div>
+    <div class="col-auto ms-auto">
+      <a href="?" class="btn btn-link">Clear</a>
+      <a href="/dashboard/players/export/csv/?q={{ request.GET.q|urlencode }}" class="btn btn-outline-primary">Export CSV</a>
+    </div>
+  </form>
+
+  <table class="table table-striped">
+    <thead><tr><th>#</th><th>Name</th><th>Mobile</th><th>Role</th><th>District</th><th>Approved</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for p in page_obj %}
+        <tr>
+          <td>{{ p.id }}</td>
+          <td>{{ p.full_name }}</td>
+          <td>{{ p.mobile_number }}</td>
+          <td>{{ p.playing_role }}</td>
+          <td>{{ p.district }}</td>
+          <td>{% if p.is_approved %}Yes{% else %}No{% endif %}</td>
+          <td><a class="btn btn-sm btn-primary" href="/dashboard/players/{{ p.pk }}/">View</a></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <nav>
+    <ul class="pagination">
+      {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+      <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+      {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+    </ul>
+  </nav>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'player_registration/base.html' %}
+{% block content %}
+  <div class="row">
+    <div class="col-md-3">
+      <div class="card text-white bg-primary mb-3 stat-card"><div class="card-body"><div><h5 class="card-title">Total</h5><p class="card-text fs-4">{{ total }}</p></div><i class="bi bi-people-fill fs-1"></i></div></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-success mb-3 stat-card"><div class="card-body"><div><h5 class="card-title">Approved</h5><p class="card-text fs-4">{{ approved }}</p></div><i class="bi bi-check-circle-fill fs-1"></i></div></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-dark bg-warning mb-3 stat-card"><div class="card-body"><div><h5 class="card-title">Pending</h5><p class="card-text fs-4">{{ pending }}</p></div><i class="bi bi-hourglass-split fs-1"></i></div></div>
+    </div>
+    <div class="col-md-3 text-end">
+      <a href="/dashboard/players/" class="btn btn-outline-secondary mt-2">View Players</a>
+      <a href="/dashboard/logout/" class="btn btn-outline-danger mt-2">Logout</a>
+    </div>
+  </div>
+  <h4>Recent Registrations</h4>
+  <ul class="list-group">
+    {% for p in recent %}
+      <li class="list-group-item">{{ p.full_name }} — {{ p.mobile_number }} <span class="float-end">{{ p.created_at|date:"Y-m-d H:i" }}</span></li>
+    {% empty %}
+      <li class="list-group-item">No recent registrations</li>
+    {% endfor %}
+  </ul>
+  <div class="mt-4 card p-3">
+    <h5>Approval Ratio</h5>
+    <div style="height:220px;">
+      <canvas id="approvalChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      renderApprovalChart('approvalChart', {{ approved }}, {{ pending }});
+    });
+  </script>
+{% endblock %}
