@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Player Detail — MPL 2026</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/static/images/logo-mpl.svg">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg mb-4 header-nav">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" href="/">
+        <img src="/static/images/logo-mpl.svg" alt="MPL 2026" height="54" style="margin-right:14px">
+        <span class="brand-text">Maskedih Premier League</span>
+      </a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link text-white" href="/dashboard/players/">Players</a></li>
+          <li class="nav-item"><a class="nav-link text-warning" href="#" id="logoutLink">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div id="alert-container"></div>
+    <div id="content">
+      <div class="text-center py-5 text-muted"><i class="bi bi-hourglass-split fs-1"></i><p>Loading player…</p></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const token = localStorage.getItem('mpl_token');
+    if (!token) window.location.href = '/dashboard/login/';
+
+    document.getElementById('logoutLink').addEventListener('click', function (e) {
+      e.preventDefault();
+      localStorage.removeItem('mpl_token');
+      localStorage.removeItem('mpl_username');
+      window.location.href = '/dashboard/login/';
+    });
+
+    const playerId = new URLSearchParams(window.location.search).get('id');
+    if (!playerId) window.location.href = '/dashboard/players/';
+
+    function escHtml(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function showAlert(msg, type = 'danger') {
+      const c = document.getElementById('alert-container');
+      c.innerHTML = `<div class="alert alert-${type} alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button>${msg}</div>`;
+    }
+
+    function genderLabel(g) {
+      if (g === 'M') return 'Male';
+      if (g === 'F') return 'Female';
+      if (g === 'O') return 'Other';
+      return g || '—';
+    }
+
+    let player = null;
+
+    async function loadPlayer() {
+      const res = await fetch(`/api/players/${playerId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) {
+        localStorage.removeItem('mpl_token');
+        window.location.href = '/dashboard/login/';
+        return;
+      }
+      if (!res.ok) {
+        document.getElementById('content').innerHTML = '<div class="alert alert-danger">Player not found.</div>';
+        return;
+      }
+      player = await res.json();
+      renderPlayer();
+    }
+
+    function renderPlayer() {
+      const p = player;
+      const approvedBadge = p.isApproved
+        ? '<span class="badge bg-success fs-6">Approved</span>'
+        : '<span class="badge bg-warning text-dark fs-6">Pending</span>';
+
+      document.title = `${p.fullName} — MPL 2026`;
+
+      document.getElementById('content').innerHTML = `
+        <div class="d-flex align-items-center mb-3 gap-3">
+          <h2 class="mb-0">${escHtml(p.fullName)}</h2>
+          ${approvedBadge}
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            ${p.profilePhotoUrl ? `<img src="${escHtml(p.profilePhotoUrl)}" class="img-fluid rounded shadow-sm" alt="photo">` : `<div class="bg-light rounded d-flex align-items-center justify-content-center" style="height:180px"><i class="bi bi-person-fill text-muted" style="font-size:4rem"></i></div>`}
+          </div>
+
+          <div class="col-md-8">
+            <div class="card card-primary mb-3">
+              <div class="card-body">
+                <h5 class="card-title mb-3">Personal Details</h5>
+                <table class="table table-borderless mb-0">
+                  <tbody>
+                    <tr><th style="width:180px">Mobile</th><td>${escHtml(p.mobileNumber)}</td></tr>
+                    <tr><th>Email</th><td>${escHtml(p.email || '—')}</td></tr>
+                    <tr><th>Date of Birth</th><td>${escHtml(p.dateOfBirth || '—')}</td></tr>
+                    <tr><th>Age</th><td>${p.age ?? '—'}</td></tr>
+                    <tr><th>Gender</th><td>${genderLabel(p.gender)}</td></tr>
+                    <tr><th>Address</th><td>${escHtml(p.address || '—')}</td></tr>
+                    <tr><th>District</th><td>${escHtml(p.district || '—')}</td></tr>
+                    <tr><th>State</th><td>${escHtml(p.state || '—')}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card card-primary mb-3">
+              <div class="card-body">
+                <h5 class="card-title mb-3">Cricket Details</h5>
+                <table class="table table-borderless mb-0">
+                  <tbody>
+                    <tr><th style="width:180px">Playing Role</th><td>${escHtml(p.playingRole || '—')}</td></tr>
+                    <tr><th>Batting Style</th><td>${escHtml(p.battingStyle || '—')}</td></tr>
+                    <tr><th>Bowling Style</th><td>${escHtml(p.bowlingStyle || '—')}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card card-primary mb-3">
+              <div class="card-body">
+                <h5 class="card-title mb-3">Emergency Contact</h5>
+                <table class="table table-borderless mb-0">
+                  <tbody>
+                    <tr><th style="width:180px">Name</th><td>${escHtml(p.emergencyContactName || '—')}</td></tr>
+                    <tr><th>Number</th><td>${escHtml(p.emergencyContactNumber || '—')}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <p class="text-muted small">Registered: ${new Date(p.createdAt).toLocaleString()}</p>
+
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              ${!p.isApproved
+                ? `<button class="btn btn-success" id="approveBtn"><i class="bi bi-check-circle"></i> Approve</button>`
+                : `<button class="btn btn-warning" id="rejectBtn"><i class="bi bi-x-circle"></i> Reject</button>`
+              }
+              <button class="btn btn-primary" id="editBtn"><i class="bi bi-pencil"></i> Edit</button>
+              <button class="btn btn-danger" id="deleteBtn"><i class="bi bi-trash"></i> Delete</button>
+              <a href="/dashboard/players/" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div class="modal fade" id="editModal" tabindex="-1">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Edit Player</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <form id="editForm">
+                  <div class="row">
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">Full Name</label>
+                      <input name="full_name" class="form-control" value="${escHtml(p.fullName)}" required>
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">Mobile Number</label>
+                      <input name="mobile_number" class="form-control" value="${escHtml(p.mobileNumber)}" required>
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">Email</label>
+                      <input name="email" type="email" class="form-control" value="${escHtml(p.email || '')}">
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">Date of Birth</label>
+                      <input name="date_of_birth" type="date" class="form-control" value="${escHtml(p.dateOfBirth || '')}">
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">Age</label>
+                      <input name="age" type="number" class="form-control" value="${p.age ?? ''}">
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">Gender</label>
+                      <select name="gender" class="form-select">
+                        <option value="">---------</option>
+                        <option value="M" ${p.gender === 'M' ? 'selected' : ''}>Male</option>
+                        <option value="F" ${p.gender === 'F' ? 'selected' : ''}>Female</option>
+                        <option value="O" ${p.gender === 'O' ? 'selected' : ''}>Other</option>
+                      </select>
+                    </div>
+                    <div class="mb-3 col-md-12">
+                      <label class="form-label">Address</label>
+                      <textarea name="address" class="form-control" rows="2">${escHtml(p.address || '')}</textarea>
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">District</label>
+                      <input name="district" class="form-control" value="${escHtml(p.district || '')}">
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">State</label>
+                      <input name="state" class="form-control" value="${escHtml(p.state || '')}">
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">Playing Role</label>
+                      <select name="playing_role" class="form-select">
+                        <option value="">---------</option>
+                        <option value="Batsman" ${p.playingRole === 'Batsman' ? 'selected' : ''}>Batsman</option>
+                        <option value="Bowler" ${p.playingRole === 'Bowler' ? 'selected' : ''}>Bowler</option>
+                        <option value="All-Rounder" ${p.playingRole === 'All-Rounder' ? 'selected' : ''}>All-Rounder</option>
+                        <option value="Wicket Keeper" ${p.playingRole === 'Wicket Keeper' ? 'selected' : ''}>Wicket Keeper</option>
+                      </select>
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">Batting Style</label>
+                      <input name="batting_style" class="form-control" value="${escHtml(p.battingStyle || '')}">
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">Bowling Style</label>
+                      <input name="bowling_style" class="form-control" value="${escHtml(p.bowlingStyle || '')}">
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">Emergency Contact Name</label>
+                      <input name="emergency_contact_name" class="form-control" value="${escHtml(p.emergencyContactName || '')}">
+                    </div>
+                    <div class="mb-3 col-md-6">
+                      <label class="form-label">Emergency Contact Number</label>
+                      <input name="emergency_contact_number" class="form-control" value="${escHtml(p.emergencyContactNumber || '')}">
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-brand" id="saveEditBtn">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      bindActions();
+    }
+
+    function bindActions() {
+      const p = player;
+
+      // Approve
+      const approveBtn = document.getElementById('approveBtn');
+      if (approveBtn) {
+        approveBtn.addEventListener('click', async function () {
+          this.disabled = true;
+          await patchPlayer({ is_approved: true });
+        });
+      }
+
+      // Reject
+      const rejectBtn = document.getElementById('rejectBtn');
+      if (rejectBtn) {
+        rejectBtn.addEventListener('click', async function () {
+          this.disabled = true;
+          await patchPlayer({ is_approved: false });
+        });
+      }
+
+      // Edit
+      document.getElementById('editBtn').addEventListener('click', function () {
+        const modal = new bootstrap.Modal(document.getElementById('editModal'));
+        modal.show();
+      });
+
+      document.getElementById('saveEditBtn').addEventListener('click', async function () {
+        const form = document.getElementById('editForm');
+        const data = {};
+        for (const el of form.elements) {
+          if (el.name) {
+            data[el.name] = el.value;
+          }
+        }
+        if (data.age) data.age = parseInt(data.age, 10);
+        this.disabled = true;
+        this.textContent = 'Saving…';
+        const res = await fetch(`/api/players/${playerId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(data),
+        });
+        if (res.ok) {
+          player = await res.json();
+          bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+          renderPlayer();
+          showAlert('Player updated successfully.', 'success');
+        } else {
+          const j = await res.json();
+          showAlert(j.error || 'Update failed.');
+          this.disabled = false;
+          this.textContent = 'Save Changes';
+        }
+      });
+
+      // Delete
+      document.getElementById('deleteBtn').addEventListener('click', async function () {
+        if (!confirm('Are you sure you want to delete this player? This cannot be undone.')) return;
+        this.disabled = true;
+        const res = await fetch(`/api/players/${playerId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          window.location.href = '/dashboard/players/';
+        } else {
+          showAlert('Delete failed. Please try again.');
+          this.disabled = false;
+        }
+      });
+    }
+
+    async function patchPlayer(patch) {
+      const res = await fetch(`/api/players/${playerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(patch),
+      });
+      if (res.ok) {
+        player = await res.json();
+        renderPlayer();
+        showAlert(patch.is_approved ? 'Player approved.' : 'Player rejected.', 'success');
+      } else {
+        const j = await res.json();
+        showAlert(j.error || 'Action failed.');
+      }
+    }
+
+    loadPlayer();
+  </script>
+</body>
+</html>
